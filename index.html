@@ -62,11 +62,14 @@ html,body{
   /* No blurred photo background in player */
   .ph-bg { filter: brightness(.18) saturate(.5); }
 
-  /* No animated glow on "33" — static shadow instead */
+  /* filter:drop-shadow + -webkit-background-clip:text causes flicker on iOS WebKit */
   .year-num {
     animation: fade-up .9s .3s ease both;
-    filter: drop-shadow(0 0 28px rgba(212,168,67,.5));
+    filter: none;
   }
+
+  /* Stop continuous float animation on hint text */
+  .intro-hint { animation: fade-up .9s .75s ease both; }
 
   /* Remove backdrop-blur from UI panels */
   #counter,
@@ -1055,11 +1058,10 @@ const AURORA_ORBS = [
 ];
 
 function spawnAurora(container) {
-  // On mobile: no filter:blur — each blurred animated element creates a GPU
-  // compositing layer; multiple ones together exhaust iOS memory.
-  // Instead use soft radial gradients with reduced opacity (looks similar, no GPU cost).
-  const blur = IS_MOBILE ? '' : 'filter:blur(65px);';
-  const mobileMult = IS_MOBILE ? 0.55 : 1;
+  // On mobile: skip aurora entirely — animated transforms behind gradient text
+  // cause GPU layer thrashing and flicker on iOS Safari.
+  // Dark solid background is clean and stable.
+  if (IS_MOBILE) return;
   AURORA_ORBS.forEach(o => {
     const el = document.createElement('div');
     el.style.cssText =
@@ -1067,9 +1069,8 @@ function spawnAurora(container) {
       `width:${o.s}px;height:${o.s}px;` +
       `left:${o.x}%;top:${o.y}%;` +
       `transform:translate(-50%,-50%);` +
-      `background:radial-gradient(circle,${o.col} 0%,transparent 60%);` +
-      `opacity:${mobileMult};` +
-      blur +
+      `background:radial-gradient(circle,${o.col} 0%,transparent 70%);` +
+      `filter:blur(65px);` +
       `animation:${o.anim} ${o.dur}s ease-in-out infinite alternate;`;
     container.appendChild(el);
   });
