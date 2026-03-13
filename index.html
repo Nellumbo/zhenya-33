@@ -1170,27 +1170,46 @@ function buildReel(srcs) {
       dots.appendChild(d);
     });
     wrap.appendChild(dots);
-    _reelTimer = setInterval(advanceReel, 3800);
+    _reelTimer = setInterval(advanceReel, 6500);
   }
 
-  wrap.addEventListener('pointerdown', () => openLightboxSrc(_reelSrcs[_reelIdx]));
+  // Swipe to change slide; tap to open lightbox
+  let _swipeX = null;
+  wrap.addEventListener('pointerdown', e => { _swipeX = e.clientX; });
+  wrap.addEventListener('pointerup', e => {
+    const dx = e.clientX - _swipeX;
+    if (Math.abs(dx) < 10) {
+      // Tap — open lightbox
+      openLightboxSrc(_reelSrcs[_reelIdx]);
+    } else if (Math.abs(dx) >= 30) {
+      // Swipe — advance or go back
+      if (dx < 0) advanceReel();
+      else advanceReelBack();
+      // Reset auto-advance timer
+      if (_reelTimer) { clearInterval(_reelTimer); _reelTimer = null; }
+      if (_reelSrcs.length > 1) _reelTimer = setInterval(advanceReel, 6500);
+    }
+    _swipeX = null;
+  });
 }
 
-function advanceReel() {
+function _goToReelSlide(idx) {
   const wrap   = document.getElementById('photo-reel');
   const slides = wrap.querySelectorAll('.reel-slide');
   const dots   = wrap.querySelectorAll('.reel-dot');
   slides[_reelIdx].classList.remove('reel-active');
   if (dots.length) dots[_reelIdx].classList.remove('active');
-  _reelIdx = (_reelIdx + 1) % _reelSrcs.length;
+  _reelIdx = (idx + _reelSrcs.length) % _reelSrcs.length;
   const next = slides[_reelIdx];
-  // Lazy-load background on first reveal
   if (!next.style.backgroundImage && next.dataset.src) {
     next.style.backgroundImage = `url('${next.dataset.src}')`;
   }
   next.classList.add('reel-active');
   if (dots.length) dots[_reelIdx].classList.add('active');
 }
+
+function advanceReel()     { _goToReelSlide(_reelIdx + 1); }
+function advanceReelBack() { _goToReelSlide(_reelIdx - 1); }
 
 /* ── LYRICS PLAYER (2-line karaoke with scroll animation) ── */
 
@@ -1360,7 +1379,7 @@ function togglePlay() {
     // Restart visualizer if it was stopped
     if (!_visRaf) visFrame();
     // Restart reel if it was stopped
-    if (!_reelTimer && _reelSrcs.length > 1) _reelTimer = setInterval(advanceReel, 3800);
+    if (!_reelTimer && _reelSrcs.length > 1) _reelTimer = setInterval(advanceReel, 6500);
   } else {
     a.pause(); b.textContent = '▶';
     // Stop visualizer RAF to save GPU
