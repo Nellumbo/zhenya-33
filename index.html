@@ -126,10 +126,8 @@ html,body{
   animation:year-glow 2.8s ease-in-out infinite,fade-up .9s .3s ease both;
 }
 .year-text{
-  color:transparent;
-  background:linear-gradient(168deg,var(--gold2) 15%,var(--gold) 50%,#9a6e1a 100%);
-  -webkit-background-clip:text;background-clip:text;
   display:block;
+  line-height:1;
 }
 @keyframes year-glow{
   0%,100%{filter:drop-shadow(0 0 28px rgba(212,168,67,.45))}
@@ -620,14 +618,6 @@ html,body{
   /* Kill year-glow pulsation behind "33" */
   .intro-year { animation: fade-up .9s .3s ease both; }
 
-  /* Solid gold text instead of gradient + background-clip:text */
-  .year-text {
-    color: #d4a843;
-    background: none;
-    -webkit-background-clip: unset;
-    background-clip: unset;
-  }
-
   /* Stop float animation on hint */
   .intro-hint { animation: fade-up .9s .75s ease both; }
 
@@ -674,7 +664,7 @@ html,body{
   <div id="sparks"></div>
   <div class="intro-content">
     <div class="intro-eyebrow">✦ С Днём Рождения ✦</div>
-    <div class="intro-year"><span class="year-text">33</span></div>
+    <div class="intro-year"><span class="year-text">🎂</span></div>
     <div class="intro-rule"></div>
     <div class="intro-name">Женя Попов</div>
     <div class="intro-sub">Тридцать три — и это только начало</div>
