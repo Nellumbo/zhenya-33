@@ -79,6 +79,25 @@ html,body{
     backdrop-filter: none; -webkit-backdrop-filter: none;
     background: rgba(0,0,0,.97);
   }
+
+  /* Static ring instead of animated ring-pulse on heads */
+  .head { animation: none; }
+
+  /* drop-shadow + background-clip:text = iOS WebKit GPU crash */
+  .reveal-num { filter: none; }
+
+  /* Single simpler text-shadow on karaoke */
+  .lyric-slot { text-shadow: 0 2px 6px rgba(0,0,0,.8); }
+
+  /* Disable continuous wobble on reveal emoji */
+  .reveal-icon { animation: none; }
+
+  /* Disable btn-pulse on play button */
+  #play-btn { animation: none; }
+
+  /* Remove brightness/saturation filter on caught heads */
+  .head.caught .head-tap img,
+  .head.caught .head-tap .emoji-fb { filter: none; }
 }
 
 /* Confetti canvas */
@@ -1207,6 +1226,9 @@ function initPlayer() {
   audio.addEventListener('timeupdate', onTime);
   audio.addEventListener('ended', () => {
     document.getElementById('toggle-btn').textContent = '▶';
+    // Stop visualizer and reel when audio ends
+    if (_visRaf) { cancelAnimationFrame(_visRaf); _visRaf = null; }
+    if (_reelTimer) { clearInterval(_reelTimer); _reelTimer = null; }
   });
   document.getElementById('toggle-btn').addEventListener('click', togglePlay);
   initVisualizer();
@@ -1257,7 +1279,14 @@ function initVisualizer() {
   visFrame();
 }
 
+let _visFrameCount = 0;
+
 function visFrame() {
+  // On mobile: render every 3rd frame to reduce GPU load
+  if (IS_MOBILE && ++_visFrameCount % 3 !== 0) {
+    _visRaf = requestAnimationFrame(visFrame);
+    return;
+  }
   _visRaf = requestAnimationFrame(visFrame);
   if (!_visCtx) return;
   const audio   = document.getElementById('song');
@@ -1331,8 +1360,19 @@ function closeLightbox() {
 function togglePlay() {
   const a = document.getElementById('song');
   const b = document.getElementById('toggle-btn');
-  if (a.paused) { a.play(); b.textContent = '⏸'; }
-  else          { a.pause(); b.textContent = '▶'; }
+  if (a.paused) {
+    a.play(); b.textContent = '⏸';
+    // Restart visualizer if it was stopped
+    if (!_visRaf) visFrame();
+    // Restart reel if it was stopped
+    if (!_reelTimer && _reelSrcs.length > 1) _reelTimer = setInterval(advanceReel, 3800);
+  } else {
+    a.pause(); b.textContent = '▶';
+    // Stop visualizer RAF to save GPU
+    if (_visRaf) { cancelAnimationFrame(_visRaf); _visRaf = null; }
+    // Stop reel interval
+    if (_reelTimer) { clearInterval(_reelTimer); _reelTimer = null; }
+  }
 }
 
 function fmt(s) {
