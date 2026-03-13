@@ -1080,20 +1080,18 @@ const AURORA_ORBS = [
 ];
 
 function spawnAurora(container) {
-  // On mobile: skip aurora entirely — animated transforms behind gradient text
-  // cause GPU layer thrashing and flicker on iOS Safari.
-  // Dark solid background is clean and stable.
-  if (IS_MOBILE) return;
   AURORA_ORBS.forEach(o => {
     const el = document.createElement('div');
+    // Mobile: static orbs, no blur filter, larger to compensate
+    // Desktop: animated with blur
+    const size = IS_MOBILE ? o.s * 1.4 : o.s;
     el.style.cssText =
       `position:absolute;border-radius:50%;` +
-      `width:${o.s}px;height:${o.s}px;` +
+      `width:${size}px;height:${size}px;` +
       `left:${o.x}%;top:${o.y}%;` +
       `transform:translate(-50%,-50%);` +
       `background:radial-gradient(circle,${o.col} 0%,transparent 70%);` +
-      `filter:blur(65px);` +
-      `animation:${o.anim} ${o.dur}s ease-in-out infinite alternate;`;
+      (IS_MOBILE ? '' : `filter:blur(65px);animation:${o.anim} ${o.dur}s ease-in-out infinite alternate;`);
     container.appendChild(el);
   });
 }
