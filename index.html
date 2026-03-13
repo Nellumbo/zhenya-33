@@ -834,6 +834,9 @@ let currentLyric = -1;
 /* ── INTRO SPARKLES ──────────────────────────────────────── */
 
 function buildSparks() {
+  // On mobile: 22 continuously-animated elements (opacity+transform) each force
+  // a GPU compositing layer on iOS Safari — combined they exhaust GPU memory and crash.
+  if (IS_MOBILE) return;
   const c = document.getElementById('sparks');
   for (let i = 0; i < 22; i++) {
     const el = document.createElement('div');
