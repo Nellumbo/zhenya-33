@@ -684,7 +684,7 @@ html,body{
   <button id="lb-close">✕ Закрыть</button>
 </div>
 
-<audio id="song" src="song.mp3" preload="auto"></audio>
+<audio id="song" src="song.mp3" preload="metadata"></audio>
 
 <script>
 // Unregister any service workers from other apps on this origin
@@ -1057,15 +1057,15 @@ let _reelIdx  = 0;
 let _reelSrcs = [];   // only actually-existing photos
 let _reelTimer = null;
 
-// Called at page load — results stored in _reelSrcs before player opens
+// Called at page load — uses HEAD requests (no image data in memory)
 function preloadGallery() {
   let pending = GALLERY.length;
   const valid = new Array(GALLERY.length).fill(null);
   GALLERY.forEach((src, i) => {
-    const img = new Image();
-    img.onload  = () => { valid[i] = src;  if (--pending === 0) _reelSrcs = valid.filter(Boolean); };
-    img.onerror = () => {                    if (--pending === 0) _reelSrcs = valid.filter(Boolean); };
-    img.src = src;
+    fetch(src, { method: 'HEAD' })
+      .then(r => { if (r.ok) valid[i] = src; })
+      .catch(() => {})
+      .finally(() => { if (--pending === 0) _reelSrcs = valid.filter(Boolean); });
   });
 }
 
@@ -1079,14 +1079,14 @@ function initReel() {
     // Already preloaded in background — instant
     buildReel(_reelSrcs);
   } else {
-    // Fallback: preload now (e.g. very fast tap before preload finishes)
+    // Fallback: check existence via HEAD requests (no image data in memory)
     let pending = GALLERY.length;
     const valid = new Array(GALLERY.length).fill(null);
     GALLERY.forEach((src, i) => {
-      const img = new Image();
-      img.onload  = () => { valid[i] = src;  if (--pending === 0) buildReel(valid.filter(Boolean)); };
-      img.onerror = () => {                    if (--pending === 0) buildReel(valid.filter(Boolean)); };
-      img.src = src;
+      fetch(src, { method: 'HEAD' })
+        .then(r => { if (r.ok) valid[i] = src; })
+        .catch(() => {})
+        .finally(() => { if (--pending === 0) buildReel(valid.filter(Boolean)); });
     });
   }
 }
@@ -1099,7 +1099,9 @@ function buildReel(srcs) {
   srcs.forEach((src, i) => {
     const slide = document.createElement('div');
     slide.className = 'reel-slide' + (i === 0 ? ' reel-active' : '');
-    slide.style.backgroundImage = `url('${src}')`;
+    slide.dataset.src = src;
+    // Lazy: only load the first slide's image now; rest load when they become active
+    if (i === 0) slide.style.backgroundImage = `url('${src}')`;
     wrap.appendChild(slide);
   });
 
@@ -1125,7 +1127,12 @@ function advanceReel() {
   slides[_reelIdx].classList.remove('reel-active');
   if (dots.length) dots[_reelIdx].classList.remove('active');
   _reelIdx = (_reelIdx + 1) % _reelSrcs.length;
-  slides[_reelIdx].classList.add('reel-active');
+  const next = slides[_reelIdx];
+  // Lazy-load background on first reveal
+  if (!next.style.backgroundImage && next.dataset.src) {
+    next.style.backgroundImage = `url('${next.dataset.src}')`;
+  }
+  next.classList.add('reel-active');
   if (dots.length) dots[_reelIdx].classList.add('active');
 }
 
