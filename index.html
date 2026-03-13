@@ -52,10 +52,32 @@ html,body{
   66% {transform:translate(3%,-3%)}
   100%{transform:translate(-2%,3%)}
 }
-/* Disable grain on touch devices — invisible at this opacity on phone screens,
-   but the animated GPU layer causes flickering and memory pressure on iOS */
+/* ── MOBILE: strip all GPU-heavy blur filters ─────────────
+   filter:blur() and backdrop-filter create separate GPU compositing
+   layers on iOS — multiple animated ones cause memory crash.
+   On a phone screen these effects are barely visible anyway. */
 @media (pointer: coarse) {
   #grain { display: none; }
+
+  /* No blurred photo background in player */
+  .ph-bg { filter: brightness(.18) saturate(.5); }
+
+  /* No animated glow on "33" — static shadow instead */
+  .year-num {
+    animation: fade-up .9s .3s ease both;
+    filter: drop-shadow(0 0 28px rgba(212,168,67,.5));
+  }
+
+  /* Remove backdrop-blur from UI panels */
+  #counter,
+  #reveal,
+  .player-header { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+  /* Lightbox: solid bg instead of blur */
+  #lightbox {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: rgba(0,0,0,.97);
+  }
 }
 
 /* Confetti canvas */
@@ -698,6 +720,9 @@ if ('serviceWorker' in navigator) {
 <script>
 'use strict';
 
+/* ── MOBILE DETECTION ────────────────────────────────────── */
+const IS_MOBILE = window.matchMedia('(pointer: coarse)').matches;
+
 /* ── CONFIG ──────────────────────────────────────────────── */
 
 const RING = [
@@ -981,7 +1006,8 @@ function mkP(burst) {
 function startConfetti() {
   const cv = document.getElementById('confetti');
   cv.width = window.innerWidth; cv.height = window.innerHeight;
-  for (let i = 0; i < 160; i++) confParts.push(mkP(true));
+  const count = IS_MOBILE ? 60 : 160;
+  for (let i = 0; i < count; i++) confParts.push(mkP(true));
   confSpawning = true;
   confLoop();
   // Stop spawning new particles after 4.5s — existing ones fall out on their own
@@ -1029,6 +1055,11 @@ const AURORA_ORBS = [
 ];
 
 function spawnAurora(container) {
+  // On mobile: no filter:blur — each blurred animated element creates a GPU
+  // compositing layer; multiple ones together exhaust iOS memory.
+  // Instead use soft radial gradients with reduced opacity (looks similar, no GPU cost).
+  const blur = IS_MOBILE ? '' : 'filter:blur(65px);';
+  const mobileMult = IS_MOBILE ? 0.55 : 1;
   AURORA_ORBS.forEach(o => {
     const el = document.createElement('div');
     el.style.cssText =
@@ -1036,8 +1067,9 @@ function spawnAurora(container) {
       `width:${o.s}px;height:${o.s}px;` +
       `left:${o.x}%;top:${o.y}%;` +
       `transform:translate(-50%,-50%);` +
-      `background:radial-gradient(circle,${o.col} 0%,transparent 70%);` +
-      `filter:blur(65px);` +
+      `background:radial-gradient(circle,${o.col} 0%,transparent 60%);` +
+      `opacity:${mobileMult};` +
+      blur +
       `animation:${o.anim} ${o.dur}s ease-in-out infinite alternate;`;
     container.appendChild(el);
   });
