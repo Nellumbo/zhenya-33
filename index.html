@@ -850,6 +850,7 @@ const caught = new Set();
 const headObjs = [];
 const headEls  = [];
 let rafGame = null;
+let _catchZIndex = 110; // increments on each catch so newest caught is always on top
 const confParts  = [];
 let confSpawning = false;
 let currentLyric = -1;
@@ -958,6 +959,7 @@ function catchHead(i) {
   headObjs[i].vx = 0; headObjs[i].vy = 0;
 
   const el = headEls[i];
+  el.style.zIndex = _catchZIndex++;  // raise above all previously caught heads
   el.classList.add('tapping');
   setTimeout(() => el.classList.remove('tapping'), 340);
   setTimeout(() => el.classList.add('caught'), 260);
