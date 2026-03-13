@@ -62,8 +62,9 @@ html,body{
   /* No blurred photo background in player */
   .ph-bg { filter: brightness(.18) saturate(.5); }
 
-  /* filter:drop-shadow + -webkit-background-clip:text causes flicker on iOS WebKit */
-  .year-num {
+  /* filter:drop-shadow + -webkit-background-clip:text causes flicker on iOS WebKit.
+     year-glow pulses the filter continuously — remove it on mobile. */
+  .intro-year {
     animation: fade-up .9s .3s ease both;
     filter: none;
   }
