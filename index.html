@@ -80,6 +80,14 @@ html,body{
     background: rgba(0,0,0,.97);
   }
 
+  /* Solid gold text instead of gradient + background-clip:text (iOS GPU crash) */
+  .year-text {
+    color: #d4a843;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+
   /* Static ring instead of animated ring-pulse on heads */
   .head { animation: none; }
 
