@@ -62,12 +62,9 @@ html,body{
   /* No blurred photo background in player */
   .ph-bg { filter: brightness(.18) saturate(.5); }
 
-  /* filter:drop-shadow + -webkit-background-clip:text causes flicker on iOS WebKit.
-     year-glow pulses the filter continuously — remove it on mobile. */
-  .intro-year {
-    animation: fade-up .9s .3s ease both;
-    filter: none;
-  }
+  /* year-glow is on outer .intro-year (no background-clip), .year-text holds the gradient.
+     Safe to disable just the glow animation on touch devices — no filter+clip conflict. */
+  .intro-year { animation: fade-up .9s .3s ease both; }
 
   /* Stop continuous float animation on hint text */
   .intro-hint { animation: fade-up .9s .75s ease both; }
@@ -155,10 +152,13 @@ html,body{
   font-family:'Bebas Neue',cursive;
   font-size:clamp(128px,38vw,196px);
   line-height:.82;
+  animation:year-glow 2.8s ease-in-out infinite,fade-up .9s .3s ease both;
+}
+.year-text{
   color:transparent;
   background:linear-gradient(168deg,var(--gold2) 15%,var(--gold) 50%,#9a6e1a 100%);
   -webkit-background-clip:text;background-clip:text;
-  animation:year-glow 2.8s ease-in-out infinite,fade-up .9s .3s ease both;
+  display:block;
 }
 @keyframes year-glow{
   0%,100%{filter:drop-shadow(0 0 28px rgba(212,168,67,.45))}
@@ -651,7 +651,7 @@ html,body{
   <div id="sparks"></div>
   <div class="intro-content">
     <div class="intro-eyebrow">✦ С Днём Рождения ✦</div>
-    <div class="intro-year">33</div>
+    <div class="intro-year"><span class="year-text">33</span></div>
     <div class="intro-rule"></div>
     <div class="intro-name">Женя Попов</div>
     <div class="intro-sub">Тридцать три — и это только начало</div>
