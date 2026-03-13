@@ -614,7 +614,8 @@ html,body{
    MUST be at the END of CSS so they win over same-specificity rules above. */
 @media (pointer: coarse) {
   #grain { display: none; }
-  .ph-bg { filter: brightness(.18) saturate(.5); }
+  /* Very dark + desaturated instead of GPU-heavy blur */
+  .ph-bg { filter: brightness(.07) saturate(.2); }
 
   /* Kill year-glow pulsation behind "33" */
   .intro-year { animation: fade-up .9s .3s ease both; }
@@ -853,11 +854,9 @@ let currentLyric = -1;
 /* ── INTRO SPARKLES ──────────────────────────────────────── */
 
 function buildSparks() {
-  // On mobile: 22 continuously-animated elements (opacity+transform) each force
-  // a GPU compositing layer on iOS Safari — combined they exhaust GPU memory and crash.
-  if (IS_MOBILE) return;
   const c = document.getElementById('sparks');
-  for (let i = 0; i < 22; i++) {
+  const count = IS_MOBILE ? 8 : 22;
+  for (let i = 0; i < count; i++) {
     const el = document.createElement('div');
     el.className = 'spark';
     const s = 2 + Math.random() * 3.5;
