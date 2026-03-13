@@ -657,6 +657,9 @@ html,body{
   /* No filter on caught heads */
   .head.caught .head-tap img,
   .head.caught .head-tap .emoji-fb { filter: none; }
+
+  /* Hide photo background in game scene — aurora used instead */
+  #scene .ph-bg { display: none; }
 }
   </style>
 </head>
@@ -1276,14 +1279,7 @@ function initVisualizer() {
   visFrame();
 }
 
-let _visFrameCount = 0;
-
 function visFrame() {
-  // On mobile: render every 3rd frame to reduce GPU load
-  if (IS_MOBILE && ++_visFrameCount % 3 !== 0) {
-    _visRaf = requestAnimationFrame(visFrame);
-    return;
-  }
   _visRaf = requestAnimationFrame(visFrame);
   if (!_visCtx) return;
   const audio   = document.getElementById('song');
@@ -1390,6 +1386,7 @@ document.getElementById('intro-btn').addEventListener('click', () => {
   setTimeout(() => intro.style.display = 'none', 900);
   const scene = document.getElementById('scene');
   scene.style.display = 'block';
+  if (IS_MOBILE) spawnAurora(scene);
   createHeads();
   bounceLoop();
 });
